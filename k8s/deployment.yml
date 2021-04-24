@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-project
+spec:
+  selector:
+    matchLabels:
+      app: k8s-project
+  replicas: 1
+  template:
+    metadata:
+      name: k8s-project
+      labels:
+        app: k8s-project
+    spec:
+      containers:
+        - name: k8s-project
+          image: rootsum/k8s-project-v2:latest
+          resources:
+            limits:
+              memory: "1Gi"
+              # cpu: "10"
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: password
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hostname-config
+                  key: postgres_host
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-project
+spec:
+  type: LoadBalancer
+  selector:
+    app: k8s-project
+  ports:
+    - port: 8080
+      protocol: TCP
